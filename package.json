@@ -1,0 +1,31 @@
+{
+  "name": "tjcalendar",
+  "version": "1.0.0",
+  "description": "App that enables TJBot to be your personal planner. Uses Google Calendar.",
+  "main": "tjcal.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DrewGregory/tjcalendar.git"
+  },
+  "keywords": [
+    "tjbot"
+  ],
+  "author": "Drew Gregory",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DrewGregory/tjcalendar/issues"
+  },
+  "homepage": "https://github.com/DrewGregory/tjcalendar#readme",
+  "dependencies": {
+    "@google/maps": "^0.3.1",
+    "fs": "0.0.1-security",
+    "google-auth-library": "^0.10.0",
+    "googleapis": "^19.0.0",
+    "moment": "^2.18.1",
+    "tjbot": "^1.2.1",
+    "watson-developer-cloud": "^2.32.0"
+  }
+}
