@@ -4,7 +4,6 @@ var google = require('googleapis');
 var googlePeople = google.people('v1');
 var googleAuth = require('google-auth-library');
 var DiscoveryV1 = require ('watson-developer-cloud/discovery/v1');
-var NaturalLanguageUnderstandingV1 = require('watson-developer-cloud/natural-language-understanding/v1.js');
 var moment = require('moment');
 moment().format();
 var TJBot = require('tjbot');
@@ -54,7 +53,7 @@ var tjConfig = {
  * */
 var setUpTJBot = function (authentication){
 	update(authentication);
-	/*
+	
 	//instantiate our TJBot!
 	var tj = new TJBot(hardware, tjConfig, credentials);
 	var isListening = true;
@@ -63,6 +62,7 @@ var setUpTJBot = function (authentication){
 		if (isListening) {
 			isListening = false; //Blocks asynchronous convos
 			tj.converse(WORKSPACEID, msg, function(response){
+				console.log(response.object.entities);
 				tj.speak(response.object.output.text + ''); //Turns it into string so TJ actually speaks
 				console.log(tj._conversationContext[WORKSPACEID]);
 				if(response.object.output.action + '' === 'recommend_time') {
@@ -73,7 +73,7 @@ var setUpTJBot = function (authentication){
 			});
 		}
 		
-	});*/
+	});
 }
 
 
@@ -242,7 +242,7 @@ function listEvents(auth) {
 * @param {moment} timeMax The latest day with which we can plan the event.
 * @param {Integer} numRecs The number of recommendations we should make
 */
-function recommendFreeTime (auth, timeFrame, timeMin, timeMax, numRecs) {
+function recommendFreeTime (auth, timing, timeMin, timeMax) {
 	var calendar = google.calendar('v3');
 	calendar.freebusy.query({
 		auth: auth,
@@ -258,7 +258,27 @@ function recommendFreeTime (auth, timeFrame, timeMin, timeMax, numRecs) {
 			console.log(err);
 			return;
 		}
-		var freeTimes = []; //Array of free time frames, separated by day
+		var possibleEvents = [];
+		var numBusyTimeSlots = response.calendars.primary.busy.length;
+		var startTime = response.calendars.primary.busy[0].start === timeMin ? 
+		response.calendars.primary.busy[0].end : timeMin;
+		for (var i = 0; i < numBusyTimeSlots; i++) {
+			var possibleEvent = {};
+			possibleEvent.start = {
+				dateTime:startTime.toISOString()
+				};
+			possibleEvent.end = {
+				dateTime:response.calendars.primary.busy[i].start
+			}
+			if (timingFits(timing, possibleEvent)) {
+				var randomIndex = Math.floor(Math.random() * possibleEvents.length);
+				//Randomly add event
+				possibleEvents.splice(index, 0, possibleEvent);
+			}
+		}
+		return possibleEvents;
+		
+		/*var freeTimes = []; //Array of free time frames, separated by day
 		var numBusyTimeSlots = response.calendars.primary.busy.length;
 		var startTime = response.calendars.primary.busy[0].start === timeMin ? 
 		response.calendars.primary.busy[0].end : timeMin;
@@ -312,7 +332,7 @@ function recommendFreeTime (auth, timeFrame, timeMin, timeMax, numRecs) {
 		}
 		var responseMsg = respondWithFreeTime(freeTimes, numRecs);
 		console.log(responseMsg);
-	});
+	});*/
 }
 
 /**
@@ -477,15 +497,43 @@ function downloadCalendarHistory (auth) {
 			console.log(err);
 			return;
 		}
+		
 		var events = [];		
 		//Write new/updated events to disk.
 		userName = response.items[0].creator.displayName; //TODO: Get displayName from token just in case creator isn't user (//Write new/updated events to disk
-		for (var i = 0; i < response.items.length;i++) 
-		fs.writeFileSync(TOKEN_DIR + response.items[i].id + '.json', JSON.stringify(response.items[i]));
+		for (var i = 0; i < response.items.length;i++) {
+		//Check if the event has a location, add a type parameter, if available, then write event object to disk.
+		var event = response.items[i];
+		
+		 /*if (event.location) {
+			 console.log(event.location);
+				googleMapsClient.places({
+					query: event.location
+				}, function(err,response) {
+				if (err) { 
+					console.log('Error' + response);
+				} else {
+					console.log('Success!');
+					if (response.status == 200) {
+					console.log(response.json.results);
+					if (response.results[0].types[0]) {
+						event.type = response.json.results[0].types[0];
+					}
+					}
+					
+				}
+				fs.writeFileSync(TOKEN_DIR + response.items[i].id + '.json', JSON.stringify(event));
+				});
+			
+			}*/
+		
+		
+		}
 		//Go through all events.
 		//If attendees email matches a contact, add the event id to their events.
 		for (var i = 0; i < response.items.length; i++) {
-			events.push(response.items[i].id);
+			var event = response.items[i].id;
+			events.push(event);
 			try {
 				if (response.items[i].attendees) {
 					for (var j = 0; j < response.items[i].attendees.length; j++) {
@@ -545,16 +593,27 @@ function downloadCalendarHistory (auth) {
 		 * TESTS
 		 * ********/
 		 //console.log(recommendWhenFromWhere('Fox Lane High School, Mt Kisco, NY 10549, United States')); WORKS
-		 console.log(recommendWhoFromWhere(3,'Exit 4 Food Hall, 153 Main St, Mt Kisco, NY 10549, USA'));
+		 //console.log(recommendWhoFromWhere(3,'6 Flags Great Adventure New Jersey')); WORKS
+		 //var testPeople = JSON.parse('[{"resourceName":"people/c4413104960845401765","etag":"%EgMBAgk=","names":[{"metadata":{"primary":true,"source":{"type":"CONTACT","id":"3d3e7f948bb44ea5"}},"displayName":"Alison Gregory","familyName":"Gregory","givenName":"Alison","displayNameLastFirst":"Gregory, Alison"},{"metadata":{"source":{"type":"PROFILE","id":"100273988944898949200"}},"displayName":"Alison Gregory","familyName":"Gregory","givenName":"Alison","displayNameLastFirst":"Gregory, Alison"}],"emailAddresses":[{"metadata":{"primary":true,"source":{"type":"CONTACT","id":"3d3e7f948bb44ea5"}},"value":"alisongregoryknipp@gmail.com","type":"other","formattedType":"Other"},{"metadata":{"source":{"type":"CONTACT","id":"3d3e7f948bb44ea5"}},"value":"alisongregoryknippny@gmail.com","type":"home","formattedType":"Home"},{"metadata":{"source":{"type":"CONTACT","id":"3d3e7f948bb44ea5"}},"value":"alisongregoryny@gmail.com","type":"other","formattedType":"Other"},{"metadata":{"source":{"type":"CONTACT","id":"3d3e7f948bb44ea5"}},"value":"Amgbedford@AOL.com","type":"other","formattedType":"Other"}],"events":["61i34c9o70q34b9k6sq38b9kc5j3cb9o68q34b9m6tj32o9o6gr6adb5ck","60p36oj6cgo6abb66ko3eb9k6os62b9o74q68bb668q3gdj5ccojaohk6k","uqd04n56onbof7rv6n7jcgqak4","j1a2gqoj85k4nk49ukc4tbjkgk","uoltnun16l2pv0m1vq0vui5i84","pn7jf8abnkradeagkigqq97nps","rv00bib7g01ovmeddos1mfg56s","6pj66dr56th3eb9jccq3eb9kc8om4b9o6oo3cb9p6gq3ichl6gqjgdb470","rhq1f0bu6h9vk0iv5fr6l9mic8","3qucct0v1r8mnpkv2bathi8gms"]}]');
+		 //console.log(testPeople);
+		 //console.log(recommendWhenFromWho(testPeople));WORKS
+		 //console.log(recommendWhereFromWho(testPeople)); WORKS
+		 //var timing = {
+			// startTime:'19:00',
+			 //endTime:'20:00'
+		 //};
+		 //console.log(recommendWhoFromWhen(timing,3));WORKS
+		 //console.log(recommendWhereFromWhen(timing)); WORKS
 		//We are done adding people. Update JSON file.		
 		//runTestCode(auth);
+		
 		});
 		//recommendPeople('Rachel', 3); //Really only works with first names.
 		});
 		
 
 		
-		
+	
 		/*Supposed to break up each event for its own JSON file and add it to collection in 
 		Discovery. Add Document does not work:
 		//https://github.com/watson-developer-cloud/node-sdk/issues/397*
@@ -809,7 +868,7 @@ function recommendWhoFromWhere(numRecs, location) {
 				try {
 					var event = JSON.parse(fs.readFileSync(TOKEN_DIR + people[i].events[j] +'.json' ));
 					console.log(location + '=?' + event.location);
-					if (location === event.location + '') {
+					if (event.location.indexOf(location) !== -1) {
 						console.log(people[i].score + 'score');
 						if (people[i].score)
 							people[i].score++;
@@ -923,16 +982,16 @@ function recommendWhereFromWho(people) {
 		for (var j = 0; j<people[i].events.length; j++) {
 			var place = 'asdf';
 			try {
-				place = JSON.parse(fs.readFileSync(TOKEN_DIR + people[i].events[j])).location;
+				place = JSON.parse(fs.readFileSync(TOKEN_DIR + people[i].events[j] + '.json')).location;
 				var foundPlace = false;
 				for (var k = 0; k < places.length; k++) {
-					if (places[k].location === place) {
-						places.score++;
+					if (places[k].location.indexOf(place + '') !== -1) {
+						places[k].score++;
 						foundPlace = true;
 						break;
 					}
 				}
-				if (!foundPlace) {
+				if (!foundPlace && place) {
 					var placeObj = {
 					location : place,
 					score: 1
@@ -958,17 +1017,18 @@ function recommendWhereFromWho(people) {
 function recommendWhenFromWho (people) {
 	var startTimes = [];
 	var endTimes = [];
-	for (var i = 0;  i < people.length; i++) {
+	for (var i = 0;  i < people.length; i++){
 		if (people[i].events) {
 			for (var j = 0; j < people[i].events.length; j++) {
 				try {
 					var event = JSON.parse(fs.readFileSync(TOKEN_DIR + people[i].events[j] +'.json' ));
 					var foundStartTime = false;
 					var startTimeMoment = moment(event.start.dateTime);
-					var startTime = startTimeMoment.format('HH:mm');
-					for (var j = 0; j < startTimes.length; j++) {
-						if (startTimes[j].startTime === startTime) {
-							startTimes[j].score++;
+					var startTime = startTimeMoment.format('HH:mm') + '';
+					console.log(startTime + i + j);
+					for (var k = 0; k < startTimes.length; k++) {
+						if (startTimes[k].startTime == startTime) {
+							startTimes[k].score++;
 							foundStartTime = true;
 							break;
 						}
@@ -978,14 +1038,14 @@ function recommendWhenFromWho (people) {
 							startTime: startTime,
 							score: 1
 						}
-						startTimes.push(startTime);
+						startTimes.push(startTimeObj);
 					}
 					var foundEndTime = false;
 					var endTimeMoment = moment(event.end.dateTime);
 					var endTime = endTimeMoment.format('HH:mm');
-					for (var j = 0; j < endTimes.length; j++) {
-						if (endTimes[j].endTime === endTime) {
-							endTimes[j].score++;
+					for (var l = 0; l < endTimes.length; l++) {
+						if (endTimes[l].endTime == endTime) {
+							endTimes[l].score++;
 							foundEndTime = true;
 							break;
 						}
@@ -995,7 +1055,7 @@ function recommendWhenFromWho (people) {
 							endTime: endTime,
 							score: 1
 						}
-						endTimes.push(endTime);
+						endTimes.push(endTimeObj);
 					}
 				} catch(err) {
 					console.log(err);
@@ -1028,6 +1088,7 @@ function recommendWhoFromWhen (timing, numRecs) {
 		console.log(err);
 	}
 	for (var i = 0; i < people.length; i++) {
+		people[i].score = 0;
 		if (people[i].events) {
 			for (var j = 0; j < people[i].events.length; j++) {
 				try {
@@ -1037,6 +1098,7 @@ function recommendWhoFromWhen (timing, numRecs) {
 							people[i].score++;
 						else
 							people[i].score = 1;
+						//console.log('It fit:' + people[i].score);
 					}
 				} catch(err) {
 					//Event doesn't exist. Also shouldn't happen.
@@ -1051,7 +1113,8 @@ function recommendWhoFromWhen (timing, numRecs) {
 	var recs = [];
 	if (people.length > numRecs) {
 		for (var i = 0; i < numRecs; i++)
-			recs.push(people);
+			//console.log(people[i].names);
+			recs.push(people[i]);
 	}
 	return recs;
 	
@@ -1063,7 +1126,7 @@ function recommendWhoFromWhen (timing, numRecs) {
 *	@param {Google Event} event The event object
 */
 function timingFits (timing, event) {
-	if (timing && event && timing.startTime && timing.endTime && event.start && event.end) {
+		if (timing && event && timing.startTime && timing.endTime && event.start && event.end) {
 		try {
 		var startTimeHour = timing.startTime.substring(0,timing.startTime.indexOf(':'));
 		var startTimeMinute = timing.startTime.substring(timing.startTime.indexOf(':') + 1);
@@ -1072,14 +1135,17 @@ function timingFits (timing, event) {
 		var endTimeMinute = timing.endTime.substring(timing.endTime.indexOf(':') + 1);
 		var timingEndTime = moment().clone().hour(endTimeHour).minute(endTimeMinute);
 		var eventStartTimeString = moment(event.start.dateTime).format('HH:mm');
+		//console.log(event.start.dateTime + eventStartTimeString);
 		var eventStartTimeHour = eventStartTimeString.substring(0,eventStartTimeString.indexOf(':'));
 		var eventStartTimeMinute = eventStartTimeString.substring(eventStartTimeString.indexOf(':') + 1);
 		var eventStartTime = moment().clone().hour(eventStartTimeHour).minute(eventStartTimeMinute);
 		var eventEndTimeString = moment(event.end.dateTime).format('HH:mm');
 		var eventEndTimeHour = eventEndTimeString.substring(0,eventEndTimeString.indexOf(':'));
 		var eventEndTimeMinute = eventEndTimeString.substring(eventEndTimeString.indexOf(':') + 1);
-		var eventEndTime = moment().clone().hour(eventStartTimeHour).minute(eventStartTimeMinute);
-		return timingStartTime.diff(eventStartTime) >= 0 && eventEndTime.diff(timingEndTime) >= 0;
+		var eventEndTime = moment().clone().hour(eventEndTimeHour).minute(eventEndTimeMinute);
+		//console.log(timing.startTime + ' - ' + eventStartTimeString + timingStartTime.diff(eventStartTime));
+		//console.log(eventEndTimeString + ' - ' + timing.endTime + eventEndTime.diff(timingEndTime));
+		return timingStartTime.diff(eventStartTime) >= -60 * 1000 && eventEndTime.diff(timingEndTime) >= -60 * 1000; //If it is within a minute, then we are good.
 		} catch (err) {
 			//Probably a formatting error. Oopsies.
 			console.log(err);
@@ -1093,9 +1159,54 @@ function timingFits (timing, event) {
 * @param {Timing} timing object that contains start and end times.
 */
 function recommendWhereFromWhen (timing) {
-
+	var eventIds = [];
+	try {
+		eventIds = JSON.parse(fs.readFileSync(TOKEN_PATH)).events;
+	}
+	catch (err) {
+		//Creds file doesn't exist. shouldn't happen.
+		console.log(err);
+	}
+	var locations = [];
+	for (var i = 0; i < eventIds.length; i++) {
+		try {
+			var event = JSON.parse(fs.readFileSync(TOKEN_DIR + eventIds[i] + '.json'));
+			if (event.location) {
+			if (timingFits(timing,event)) {
+				var locationObj = {
+					location:event.location,
+					score:1
+				}
+				var foundLocation = false;
+				for (var j = 0; j < locations.length; j++) {
+					if (locations[j].location.indexOf(locationObj.location) !== -1) {
+						locations[j].score++;
+						console.log(locations[j]);
+						foundLocation = true;
+						break;
+					}
+				}	
+				if (!foundLocation) {
+					locations.push(locationObj);
+				}
+			}
+			}
+		} catch (err) {
+			//Event file not found??
+			console.log(err);
+		}
+	}
+	locations.sort(compare);
+	return locations[0];
 }
 
+function recommendNewPlace (queryString){
+	googleMapsClient.places({query:queryString},function(err,response){
+		if (!err) {
+		return(response.json.results[0]);
+		}
+	});
+}
 
 			/*if (response.object.intents[0]) {
 				var intent = response.object.intents[0].intent;
