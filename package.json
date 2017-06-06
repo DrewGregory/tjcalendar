@@ -25,6 +25,7 @@
     "google-auth-library": "^0.10.0",
     "googleapis": "^19.0.0",
     "moment": "^2.18.1",
+    "pigpio": "^0.5.1",
     "tjbot": "^1.2.1",
     "watson-developer-cloud": "^2.32.0"
   }

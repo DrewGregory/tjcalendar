@@ -35,7 +35,7 @@ var credentials = config.credentials;
 //obtain user-specific config
 var WORKSPACEID = config.conversationWorkspaceId;
 
-var hardware = ['microphone','speaker','led'];
+var hardware = ['microphone','speaker','led', 'servo'];
 
 var tjConfig = {
 	log: {
@@ -52,7 +52,9 @@ var setUpTJBot = function (authentication){
 	update(authentication);	
 	//instantiate our TJBot!
 	var tj = new TJBot(hardware, tjConfig, credentials);
+	tj.wave();
 	tj.shine('green');
+	
 	var isListening = true;
 	//Listen for a command
 	tj.listen(function(msg) {
@@ -61,7 +63,9 @@ var setUpTJBot = function (authentication){
 				tj.shine('orange');
 				var context = tj._conversationContext[WORKSPACEID];
 				//console.log(response.object.entities);
-				tj.speak(response.object.output.text + '').then(function() {tj.shine('blue');tj.resumeListening();}); // [+ ''] Turns it into string so TJ actually speaks - dont listen until after done speaking
+				var obj = tj.speak(response.object.output.text + '')
+				if (obj) obj.then(function() {tj.shine('blue');tj.resumeListening();}); // [+ ''] Turns it into string so TJ actually speaks - dont listen until after done speaking
+				console.log(obj+ 'tjspeaks');
 				//Avoids responding to itself.
 				console.log(response.object.output);
 				if(response.object.output.action + '' == 'recommendKnowingWho') {
@@ -106,7 +110,7 @@ var setUpTJBot = function (authentication){
 						' to ' + context.endTime + ' at ' + context.location + '.  Does that work well for you?').then(function(){
 						tj.resumeListening();});
 						} else {
-						 tj.speak('Sorry about this. I couldn't garner enough data to make a recommendation. Try another recommendation, or try again after you use your calendar more.').then(function(){
+						 tj.speak('Sorry about this. I couldn\'t garner enough data to make a recommendation. Try another recommendation, or try again after you use your calendar more.').then(function(){
 						tj.resumeListening();});
 						 }
 					});
@@ -134,7 +138,7 @@ var setUpTJBot = function (authentication){
 						' to ' + context.endTime + ' at ' + context.location + '.  Does that work well for you?').then(function(){
 						tj.resumeListening();});
 						} else {
-						 tj.speak('Sorry about this. I couldn't garner enough data to make a recommendation. Try another recommendation, or try again after you use your calendar more.').then(function(){
+						 tj.speak('Sorry about this. I couldn\'t garner enough data to make a recommendation. Try another recommendation, or try again after you use your calendar more.').then(function(){
 						tj.resumeListening();});
 						 }
 					});
@@ -159,7 +163,7 @@ var setUpTJBot = function (authentication){
 						' to ' + context.endTime + ' at ' + context.location + '.  Does that work well for you?').then(function(){
 						tj.resumeListening();});
 						} else {
-						 tj.speak('Sorry about this. I couldn't garner enough data to make a recommendation. Try another recommendation, or try again after you use your calendar more.').then(function(){
+						 tj.speak('Sorry about this. I couldn\'t garner enough data to make a recommendation. Try another recommendation, or try again after you use your calendar more.').then(function(){
 						tj.resumeListening();});
 						 }
 					});
@@ -231,34 +235,41 @@ var setUpTJBot = function (authentication){
 					tj.pauseListening();
 					tj.shine('pink');
 					findNewPlace(response.object.input.text, context.locationType, function(location) {
-					if (location) {
-					 
+					if (location && location !== 'Bad Location') {
 						var timeMin = moment(context.minDate.value);
 						var timeMax = moment(context.maxDate.value);
 						context.location = location;
 						console.log(context.location + 'location object');
-					recommendWhenFromWhere(authentication, context.location, timeMin, timeMax, function(timing) {
-						context.startTime = timing.startTime;
-						context.endTime = timing.endTime;
+						//Change format from 09:00:00 to 09:00
+					context.startTime = context.startTime.value.substring(0,context.startTime.value.lastIndexOf(':'));
+					context.endTime = context.endTime.value.substring(0,context.endTime.value.lastIndexOf(':'));
+						var timing = {
+							startTime: context.startTime,
+						endTime: context.endTime
+						};
+						console.log(timing);
+					recommendFreeTime(authentication, timing, timeMin, timeMax, function(timing) {
 						context.date = timing.date;
 						context.timeData = timing.timeData;
-						context.invitees = recommendWhoFromWhere(context.numberOfPeopleToInvite, context.location);
-						context.inviteList = peopleToString(context.invitees);
+						console.log(context.numberOfPeopleToInvite);
+						context.invitees = recommendWhoFromWhen(timing, context.numberOfPeopleToInvite);
+						context.inviteList = peopleToString(context.invitees);		
 						context.printRecommendation = true;
-						if (context.inviteList && context.date && context.startTime && context.endTime && context.location) {
+						console.log(context.inviteList + ' ' + context.date + ' ' + context.startTime + ' ' + context.endTime + ' ' +context.location);
+						if (context.date && context.startTime && context.endTime && context.location) {
 						tj.speak('My recommendation is to invite ' + context.inviteList  + ' on ' + context.date + ' from ' + context.startTime + 
 						' to ' + context.endTime + ' at ' + context.location + '.  Does that work well for you?').then(function(){
 						tj.resumeListening();});
 						} else {
-						 tj.speak('Sorry about this. I couldn't garner enough data to make a recommendation. Try another recommendation, or try again after you use your calendar more.').then(function(){
+						 tj.speak('Sorry about this. I couldn\'t garner enough data to make a recommendation. Try another recommendation, or try again after you use your calendar more.').then(function(){
 						tj.resumeListening();});
 						 }
-						});
+					});
 					} else {
 						//Our search query didn't yield any results, or we have an error.
-						tj.speak('Unfortunately, I couldn't find anything for you. Try to have a shorter statement when I ask you to clarify.').then(function(){
+						tj.speak('Unfortunately, I couldn\'t find anything for you. Try to have a shorter statement when I ask you to clarify.').then(function(){
 						tj.resumeListening();});
-						});;
+						
 					 }
 					});
 						
@@ -456,7 +467,9 @@ function recommendFreeTime (auth, timing, timeMin, timeMax, callback) {
 			}
 			if (startTime.dayOfYear() !== endTime.dayOfYear()) {
 				console.log('Different days...');
+				console.log(startTime.dayOfYear() + ' ' + timing.endTime.substring(0,timing.endTime.indexOf(':')) +  ' ' + timing.endTime.substring(timing.endTime.indexOf(':') + 1));
 				var newEndTime = startTime.clone().dayOfYear(startTime.dayOfYear()).hour(timing.endTime.substring(0,timing.endTime.indexOf(':'))).minute(timing.endTime.substring(timing.endTime.indexOf(':') + 1));
+				console.log(newEndTime);
 				var newPossibleEvent = {
 					start: {
 						dateTime : startTime.toISOString()
@@ -911,9 +924,14 @@ function compare(p1, p2) {
 		return 1;
 	return 0;
 }
+/**
+ * 	Recommends timeframe given a location and it's opening hours.
+ * TODO: Figure out way to find place details, while considering API limitations.	
+ * 
+ */
+function recommendWhenFromNewPlace() {
 
-
-
+}
 
 
 
@@ -1278,10 +1296,17 @@ function recommendWhereFromWhen (timing) {
 	return locations[0];
 }
 
-function recommendNewPlace (queryString, type, callback){
+function findNewPlace (queryString, type, callback){
 	googleMapsClient.places({query:queryString},function(err,response){
 		if (!err) {
-			callback(response.json.results[0].formatted_address));
+			console.log(response.json);
+			if (response.json.results[0].formatted_address)
+			callback(response.json.results[0].formatted_address);
+			else 
+			callback('Bad Location');
+		} else {
+			console.log(err);
+			callback('Bad Location');
 		}
 	});
 }
