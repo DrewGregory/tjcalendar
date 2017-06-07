@@ -1,0 +1,4 @@
+#Ignore credentials files and node modules
+config.js
+client_secret.json
+node_modules
