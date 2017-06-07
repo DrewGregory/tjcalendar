@@ -22,15 +22,29 @@ This app uses:
 - [Google Calendar](https://developers.google.com/google-apps/calendar/)
 - [Google People](https://developers.google.com/people/)
 - [Google Maps](https://developers.google.com/maps/)
+
+Make sure all the Raspberry Pi and Node software is up to date (can take about 30 min):
+```
+sudo apt-get update
+
+sudo apt-get dist-upgrade
+
+curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
+
+sudo apt-get install -y nodejs
+
+sudo apt-get install alsa-base alsa-utils libasound2-dev
+```
+
 Begin by cloning this repository: ~ git clone https://github.com/DrewGregory/tjcalendar.git ~
 
-Next, enter the directory: ~ cd tjcalendar ~
+Next, enter the directory: `cd tjcalendar`
 
-Install necessary modules: ~ npm install ~
+Install necessary modules: `npm install`
 
-Create a config file: ~ cp config.default.js config.js ~
+Create a config file: `cp config.default.js config.js`
 
-Edit the file and input your credentials: ~ sudo nano config.js ~
+Edit the file and input your credentials: `sudo nano config.js` or open with text editor.
 ### Note about inputting your credentials (Recommendation: Not Necessary).
 For security and ease, I often access my credentials on a separate computer and then transfer the credentials to the Raspberry Pi. **Manually typing the credentials into the config file is enormously error prone.** I would recommend takign remote control of your Pi from your comptuer via SSH and/or VNC.
 - SSH requires you to be on the same network as your Pi. It also requires a minimal ability to traverse IP addresses. To learn more, visit https://www.raspberrypi.org/documentation/remote-access/ssh/
@@ -42,7 +56,13 @@ Since this recipe accesses your Google Calendar and Contacts, you will need to p
 ### Accessing Google Maps Credentials:
 Visit this [page](https://developers.google.com/maps/documentation/javascript/get-api-key) to add the API Key to your project. **Note: This API key should be registered in the same project that has your OAuth2 client id.**
 ## Run!
-To run the application, make sure you have 
+To run the application, run `sudo node tjcal` from a terminal in the directory (`cd tjcalendar`).
+Next, 
 ## Considerations
 If you have any questions, please contact me at djgregny@gmail.com or submit an issue to this repository.
 To revise/improve this recipe, feel free to fork it, make your revisions, and submit a pull request to this repository.
+Improvement Ideas:
+- Make chatbot even more dynamic to changes in recommendations (Watson Conversation)
+- Improve efficacy of updating data
+- Improve recommendations for new locations. (Consider using place.details in Google Maps)
+- Use different Calendar API
