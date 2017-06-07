@@ -57,7 +57,7 @@ Since this recipe accesses your Google Calendar and Contacts, you will need to p
 Visit this [page](https://developers.google.com/maps/documentation/javascript/get-api-key) to add the API Key to your project. **Note: This API key should be registered in the same project that has your OAuth2 client id.**
 ## Run!
 To run the application, run `sudo node tjcal` from a terminal in the directory (`cd tjcalendar`).
-Next, 
+The first time you run this application, you will have to sign into your Google account with the given link in the terminal. SSH/VNC can be particularly helpful in this scenario as well. Once you finish signing in, copy the resulting token in the browser and paste it into the terminal. Then press Enter. If the token is entered correctly, you will no longer have to enter your token on successive executions of the recipe. It will be saved locally on the Pi.
 ## Considerations
 If you have any questions, please contact me at djgregny@gmail.com or submit an issue to this repository.
 To revise/improve this recipe, feel free to fork it, make your revisions, and submit a pull request to this repository.
