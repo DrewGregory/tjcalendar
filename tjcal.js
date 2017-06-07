@@ -54,11 +54,10 @@ var setUpTJBot = function (authentication){
 	var tj = new TJBot(hardware, tjConfig, credentials);
 	tj.wave();
 	tj.shine('green');
-	
-	var isListening = true;
 	//Listen for a command
 	tj.listen(function(msg) {
 			tj.pauseListening(); //Blocks asynchronous convos
+			console.log('Listening to ' + msg);
 			tj.converse(WORKSPACEID, msg, function(response){
 				tj.shine('orange');
 				var context = tj._conversationContext[WORKSPACEID];
@@ -108,10 +107,12 @@ var setUpTJBot = function (authentication){
 						if (context.inviteList && context.date && context.startTime && context.endTime && context.location) {
 						tj.speak('My recommendation is to invite ' + context.inviteList  + ' on ' + context.date + ' from ' + context.startTime + 
 						' to ' + context.endTime + ' at ' + context.location + '.  Does that work well for you?').then(function(){
-						tj.resumeListening();});
+						tj.resumeListening();
+						tj.shine('blue');});
 						} else {
 						 tj.speak('Sorry about this. I couldn\'t garner enough data to make a recommendation. Try another recommendation, or try again after you use your calendar more.').then(function(){
-						tj.resumeListening();});
+						tj.resumeListening();
+						tj.shine('blue');});
 						 }
 					});
 				} else if (response.object.output.action == 'recommendKnowingWhen') {
@@ -136,10 +137,12 @@ var setUpTJBot = function (authentication){
 						if (context.inviteList && context.date && context.startTime && context.endTime && context.location) {
 						tj.speak('My recommendation is to invite ' + context.inviteList  + ' on ' + context.date + ' from ' + context.startTime + 
 						' to ' + context.endTime + ' at ' + context.location + '.  Does that work well for you?').then(function(){
-						tj.resumeListening();});
+						tj.resumeListening();
+						tj.shine('blue');});
 						} else {
 						 tj.speak('Sorry about this. I couldn\'t garner enough data to make a recommendation. Try another recommendation, or try again after you use your calendar more.').then(function(){
-						tj.resumeListening();});
+						tj.resumeListening();
+						tj.shine('blue');});
 						 }
 					});
 				} else if (response.object.output.action == 'recommendKnowingWhere') {
@@ -149,7 +152,6 @@ var setUpTJBot = function (authentication){
 					var timeMin = moment(context.minDate.value);
 					var timeMax = moment(context.maxDate.value);
 					context.location = response.object.input.text.trim();
-					console.log(context.location + 'location object');
 					recommendWhenFromWhere(authentication, context.location, timeMin, timeMax, function(timing) {
 						context.startTime = timing.startTime;
 						context.endTime = timing.endTime;
@@ -161,18 +163,21 @@ var setUpTJBot = function (authentication){
 						if (context.inviteList && context.date && context.startTime && context.endTime && context.location) {
 						tj.speak('My recommendation is to invite ' + context.inviteList  + ' on ' + context.date + ' from ' + context.startTime + 
 						' to ' + context.endTime + ' at ' + context.location + '.  Does that work well for you?').then(function(){
-						tj.resumeListening();});
+						tj.resumeListening();
+						tj.shine('blue');});
 						} else {
 						 tj.speak('Sorry about this. I couldn\'t garner enough data to make a recommendation. Try another recommendation, or try again after you use your calendar more.').then(function(){
 						tj.resumeListening();});
+						tj.shine('blue');
 						 }
 					});
 				} else if (response.object.output.action == 'addEvent') {
 					tj.pauseListening();
 					tj.shine('pink');
+					
 					console.log('adding event');
 					var timeData = moment(context.timeData);
-					console.log(timeData);
+					console.log(context.startTime + '');
 					var startTimeHour = context.startTime.substring(0,context.startTime.indexOf(':'));
 					var startTimeMinute = context.startTime.substring(context.startTime.indexOf(':') + 1);
 					var timingStartTime = timeData;
@@ -229,7 +234,12 @@ var setUpTJBot = function (authentication){
 								}
 								console.log(something);
 						});
+						tj.wave();
+					tj.wave();
+					tj.wave();
+					tj.wave();
 						tj.resumeListening();
+						tj.shine('blue');
 						
 				} else if (response.object.output.action == 'findNewPlace') {
 					tj.pauseListening();
@@ -259,17 +269,16 @@ var setUpTJBot = function (authentication){
 						if (context.date && context.startTime && context.endTime && context.location) {
 						tj.speak('My recommendation is to invite ' + context.inviteList  + ' on ' + context.date + ' from ' + context.startTime + 
 						' to ' + context.endTime + ' at ' + context.location + '.  Does that work well for you?').then(function(){
-						tj.resumeListening();});
+						tj.resumeListening();tj.shine('blue');});
 						} else {
 						 tj.speak('Sorry about this. I couldn\'t garner enough data to make a recommendation. Try another recommendation, or try again after you use your calendar more.').then(function(){
-						tj.resumeListening();});
+						tj.resumeListening();tj.shine('blue');});
 						 }
 					});
 					} else {
 						//Our search query didn't yield any results, or we have an error.
 						tj.speak('Unfortunately, I couldn\'t find anything for you. Try to have a shorter statement when I ask you to clarify.').then(function(){
-						tj.resumeListening();});
-						
+						tj.resumeListening();tj.shine('blue');});
 					 }
 					});
 						
@@ -282,6 +291,8 @@ var setUpTJBot = function (authentication){
 		
 		
 	});
+	
+	
 }
 /**
  * Transcribes list of people objects into string that will be said by TJBot
@@ -291,6 +302,7 @@ var setUpTJBot = function (authentication){
 function peopleToString(people) {
 	var string = '';
 	for (var i = 0; i < people.length; i++) {
+		console.log(people[i]);
 		string += people[i].names[0].displayName + ', ';
 		if (i == people.length - 2) {
 			string += 'and '
@@ -635,9 +647,6 @@ function updatePeople(auth, pageToken) {
 			}
 		}
 		
-		
-		//TODO:Go through Discovery, query names.
-		
 		//If names are 'contained' in any of aliases, add event to person event array.
 		//Store contacts in JSON file.
 		fs.writeFileSync(TOKEN_DIR + 'people.json', JSON.stringify(people));
@@ -672,34 +681,11 @@ function downloadCalendarHistory (auth) {
 		var events = [];		
 		//Write new/updated events to disk.
 		userName = response.items[0].creator.displayName; //TODO: Get displayName from token just in case creator isn't user (//Write new/updated events to disk
-		/*for (var i = 0; i < response.items.length;i++) {
-		//Check if the event has a location, add a type parameter, if available, then write event object to disk.
-		
-		
-		 if (event.location) {
-			 console.log(event.location);
-				googleMapsClient.places({
-					query: event.location
-				}, function(err,response) {
-				if (err) { 
-					console.log('Error' + response);
-				} else {
-					console.log('Success!');
-					if (response.status == 200) {
-					console.log(response.json.results);
-					if (response.results[0].types[0]) {
-						event.type = response.json.results[0].types[0];
-					}
-					}
-					
-				}
-				
-				});
-			
-			}
-		
-		
-		}*/
+		var natural_language_understanding = new NatLangUnd({
+	 	 'username': '89afb475-4549-422d-a0f0-4834a6c79a4f',
+		  'password': 'XTIyoLjbz06C',
+		  'version_date': '2017-02-27'
+			});
 		//Go through all events.
 		//If attendees email matches a contact, add the event id to their events.
 		for (var i = 0; i < response.items.length; i++) {
@@ -716,6 +702,35 @@ function downloadCalendarHistory (auth) {
 			} catch(error) {
 				//Means that attendees was null. We're fine. Relax.
 			}
+			var importantText = response.items[i].summary + ' ' + response.items[i].description;
+			var parameters = {
+		  'text': importantText,
+			'features': {
+				'entities': {
+					'people': true, 
+					'limit': 10
+					}
+				}
+			};
+
+			/*natural_language_understanding.analyze(parameters, function(err, result) {
+				if (err) {
+				//	console.log('error:', err); Errors are frequent. Often too many requests.
+				}else {
+					if (result.entities) {
+					for (var l = 0; l < result.entities.length; l++) {
+						if (result.entities[l].type == 'Person') {
+							var person = {
+								displayName: result.entities[l].text
+								};
+								console.log(person);
+							addEventToPerson(person, eventId);
+						}
+						
+					}
+					}
+				}
+			});*/
 		}
 		try {
 			creds = JSON.parse(fs.readFileSync(TOKEN_PATH));
@@ -724,64 +739,6 @@ function downloadCalendarHistory (auth) {
 		} catch (err) {
 			console.log(err);
 		}
-		//Use Discovery queries for getting even more people (not listed as attendees but in summaries/descriptions)
-		discovery = new DiscoveryV1({
-			username: 'b2478ad1-d80a-4d8d-84f9-a4bfef3798ad',
-			password: 'ZxNyjY1Jdca2', 
-			version_date: DiscoveryV1.VERSION_DATE_2017_04_27
-		});
-		discovery.query(
-		{environment_id:'3294a2c3-8012-47cd-b939-19ddd3325ddd', 
-		collection_id:'50130334-f2e9-49aa-9aca-ec320a3898a0', 
-		query: 'enriched_description.entities.type:person', count: 1000}, function(error, data) {
-		
-		//Look through description fields for names
-		for (var i = 0; i < data.results.length; i++) {
-			for (var j = 0; j < data.results[i].enriched_description.entities.length; j++) {
-				if (data.results[i].enriched_description.entities[j].type === "Person") {
-					var person = {
-						name : data.results[i].enriched_description.entities[j].text
-					};
-					addEventToPerson(person, data.results[i].id);
-				}
-			}
-		}
-		discovery.query(
-		{environment_id:'3294a2c3-8012-47cd-b939-19ddd3325ddd', 
-		collection_id:'50130334-f2e9-49aa-9aca-ec320a3898a0', 
-		query: 'enriched_summary.entities.type:person', count: 1000}, function(error, data) {
-		//Look through description fields for names
-		for (var i = 0; i < data.results.length; i++) {
-			for (var j = 0; j < data.results[i].enriched_summary.entities.length; j++) {
-				if (data.results[i].enriched_summary.entities[j].type === "Person") {
-					var person = {
-						name : data.results[i].enriched_summary.entities[j].text
-					}
-					addEventToPerson(person, data.results[i].id);
-				}
-			}
-		}
-		
-		/***********
-		 * TESTS
-		 * ********/
-		 //console.log(recommendWhenFromWhere('Fox Lane High School, Mt Kisco, NY 10549, United States')); WORKS
-		 //console.log(recommendWhoFromWhere(3,'6 Flags Great Adventure New Jersey')); WORKS
-		 //var testPeople = JSON.parse('[{"resourceName":"people/c4413104960845401765","etag":"%EgMBAgk=","names":[{"metadata":{"primary":true,"source":{"type":"CONTACT","id":"3d3e7f948bb44ea5"}},"displayName":"Alison Gregory","familyName":"Gregory","givenName":"Alison","displayNameLastFirst":"Gregory, Alison"},{"metadata":{"source":{"type":"PROFILE","id":"100273988944898949200"}},"displayName":"Alison Gregory","familyName":"Gregory","givenName":"Alison","displayNameLastFirst":"Gregory, Alison"}],"emailAddresses":[{"metadata":{"primary":true,"source":{"type":"CONTACT","id":"3d3e7f948bb44ea5"}},"value":"alisongregoryknipp@gmail.com","type":"other","formattedType":"Other"},{"metadata":{"source":{"type":"CONTACT","id":"3d3e7f948bb44ea5"}},"value":"alisongregoryknippny@gmail.com","type":"home","formattedType":"Home"},{"metadata":{"source":{"type":"CONTACT","id":"3d3e7f948bb44ea5"}},"value":"alisongregoryny@gmail.com","type":"other","formattedType":"Other"},{"metadata":{"source":{"type":"CONTACT","id":"3d3e7f948bb44ea5"}},"value":"Amgbedford@AOL.com","type":"other","formattedType":"Other"}],"events":["61i34c9o70q34b9k6sq38b9kc5j3cb9o68q34b9m6tj32o9o6gr6adb5ck","60p36oj6cgo6abb66ko3eb9k6os62b9o74q68bb668q3gdj5ccojaohk6k","uqd04n56onbof7rv6n7jcgqak4","j1a2gqoj85k4nk49ukc4tbjkgk","uoltnun16l2pv0m1vq0vui5i84","pn7jf8abnkradeagkigqq97nps","rv00bib7g01ovmeddos1mfg56s","6pj66dr56th3eb9jccq3eb9kc8om4b9o6oo3cb9p6gq3ichl6gqjgdb470","rhq1f0bu6h9vk0iv5fr6l9mic8","3qucct0v1r8mnpkv2bathi8gms"]}]');
-		 //console.log(testPeople);
-		 //console.log(recommendWhenFromWho(testPeople));WORKS
-		 //console.log(recommendWhereFromWho(testPeople)); WORKS
-		 //var timing = {
-			// startTime:'19:00',
-			 //endTime:'20:00'
-		 //};
-		 //console.log(recommendWhoFromWhen(timing,3));WORKS
-		 //console.log(recommendWhereFromWhen(timing)); WORKS
-		//We are done adding people. Update JSON file.		
-		//runTestCode(auth);
-		
-		});
-		//recommendPeople('Rachel', 3); //Really only works with first names.
 		});
 		
 
@@ -845,11 +802,7 @@ function downloadCalendarHistory (auth) {
 		  else
     		console.log(JSON.stringify(result, null, 2));
 		});*/	
-		
-	//recommendFreeTime(auth, 2, moment(), moment().add(3,'days'), 4);
-	//recommendPeople('John Gregory', 3)
-	//setUpTJBot(auth);
-	});
+	
 }
 
 
@@ -943,6 +896,7 @@ function recommendWhenFromNewPlace() {
 */
 function recommendWhoFromWhere(numRecs, location) {
 	location += ''; //Turn into string?
+	location = location.toLowerCase(); //Don't worry about case, especially with TTS
 	var people = [];
 	try {
 		people = JSON.parse(fs.readFileSync(TOKEN_DIR + 'people.json'));
@@ -957,7 +911,7 @@ function recommendWhoFromWhere(numRecs, location) {
 				try {
 					var event = JSON.parse(fs.readFileSync(TOKEN_DIR + people[i].events[j] +'.json' ));
 					if (event.location) {
-					if (event.location.indexOf(location) !== -1) {
+					if (event.location.toLowerCase().indexOf(location) !== -1) {
 						console.log(people[i].score + 'score');
 						if (people[i].score)
 							people[i].score++;
@@ -978,16 +932,18 @@ function recommendWhoFromWhere(numRecs, location) {
 	console.log(people[people.length - 1]);
 	if (people.length > numRecs) {
 		for (var i = 0; i < numRecs; i++)
-			recs.push(people[i].names);
+			recs.push(people[i]);
 	}
 	return recs;
 }
-//4/6mNt5VgJdbUdv3Q8k44UboGQWjjkMCa_IIAYHmPQFBQ
+
 /**
 *	Recommend when event should be held based on where it is.
 *	@param {location} location Where event will be held
 */
 function recommendWhenFromWhere(auth, location, timeMin, timeMax, callback){
+	location += '';//Turn into string just in case
+	location = location.toLowerCase();
 	var eventIds = [];
 	try {
 		eventIds = JSON.parse(fs.readFileSync(TOKEN_PATH)).events;
@@ -1004,7 +960,7 @@ function recommendWhenFromWhere(auth, location, timeMin, timeMax, callback){
 				var event = JSON.parse(fs.readFileSync(TOKEN_DIR + eventIds[i] +'.json' ));
 				if (event.location) {
 					event.location = event.location.toLowerCase();
-				if (event.location.indexOf(location) !== -1) {
+				if (event.location.toLowerCase().indexOf(location) !== -1) {
 					var foundStartTime = false;
 					console.log(event.start.dateTime);
 					var startTimeMoment = moment(event.start.dateTime);
@@ -1012,15 +968,17 @@ function recommendWhenFromWhere(auth, location, timeMin, timeMax, callback){
 					if (startTime) {
 					for (var j = 0; j < startTimes.length; j++) {
 						if (startTimes[j].startTime.indexOf(startTime) !== -1) {
-							startTimes[j].score++;
+							startTimes[j].freq++;
 							foundStartTime = true;
 							break;
 						}
 					}
 					if (!foundStartTime) {
+						
 						var startTimeObj = {
 							startTime: startTime,
-							score: 1
+							freq: 1,
+							min: startTimeMoment.hour() * 60 + startTimeMoment.minute()
 						}
 						startTimes.push(startTimeObj);
 					}
@@ -1031,7 +989,7 @@ function recommendWhenFromWhere(auth, location, timeMin, timeMax, callback){
 					if (endTime) {
 					for (var j = 0; j < endTimes.length; j++) {
 						if (endTimes[j].endTime.indexOf(endTime) !== -1) {
-							endTimes[j].score++;
+							endTimes[j].freq++;
 							foundEndTime = true;
 							break;
 						}
@@ -1039,7 +997,8 @@ function recommendWhenFromWhere(auth, location, timeMin, timeMax, callback){
 					if (!foundEndTime) {
 						var endTimeObj = {
 							endTime: endTime,
-							score: 1
+							freq: 1,
+							min: endTimeMoment.hour() * 60 + endTimeMoment.minute()
 						}
 						endTimes.push(endTimeObj);
 					}
@@ -1052,15 +1011,52 @@ function recommendWhenFromWhere(auth, location, timeMin, timeMax, callback){
 			}		
 		}
 	}
+	//Rank times by distance from average time.
+	//Find average time
+	var averageStartTime = 0;
+	var numTimes = 0;
+	for (var i = 0; i < startTimes.length; i++) {
+		for (var j = 0; j < startTimes[i].freq; j++) {
+			numTimes++;
+			averageStartTime += startTimes[i].min;
+		}
+	}
+	averageStartTime /= numTimes;
+	//Rank times by distance from average time.
+	//Find average time
+	var averageEndTime = 0;
+	numTimes = 0;
+	for (var i = 0; i < endTimes.length; i++) {
+		for (var j = 0; j < endTimes[i].freq; j++) {
+			numTimes++;
+			averageEndTime += endTimes[i].min;
+		}
+	}
+	averageEndTime /= numTimes;
+	//Give score as difference between time and average
+	for (var i = 0; i < startTimes.length; i++) {
+		startTimes[i].score = Math.abs(startTimes[i].min - averageStartTime);
+	}
+	for (var i = 0; i < endTimes.length; i++) {
+		endTimes[i].score = Math.abs(endTimes[i].min - averageEndTime);
+	}
 	startTimes.sort(compare);
 	endTimes.sort(compare);
-	console.log(startTimes[0]);
-	console.log(endTimes[0]);
+	if (startTimes && startTimes.length >= 1 && endTimes && endTimes.length >= 1 && startTimes[startTimes.length - 1].min > endTimes[endTimes.length - 1].min) {
+		//Simpson's paradox. Somehow, the best startTime is AFTER the end time. Let's just switch em.
+		var tempTime = startTimes[startTimes.length - 1];
+		startTimes[startTimes.length - 1] = endTimes[endTimes.length - 1];
+		startTimes[startTimes.length - 1].startTime = startTimes[startTimes.length - 1].endTime; 
+		endTimes[endTimes.length - 1] = tempTime;
+		endTimes[endTimes.length - 1].endTime = endTimes[endTimes.length - 1].startTime;
+		
+	}
 	if (startTimes && startTimes.length >= 1 && endTimes && endTimes.length >= 1) {
+		//Return last elements: we want a LOW score here.
 		var timing = {
-		startTime : startTimes[0].startTime,
-		endTime : endTimes[0].endTime
-		}
+		startTime : startTimes[startTimes.length - 1].startTime,
+		endTime : endTimes[endTimes.length - 1].endTime
+		};
 		recommendFreeTime(auth, timing, timeMin, timeMax, callback);
 	}
 }
@@ -1122,7 +1118,7 @@ function recommendWhenFromWho (auth,  people, timeMin, timeMax, callback) {
 					console.log(startTime + i + j);
 					for (var k = 0; k < startTimes.length; k++) {
 						if (startTimes[k].startTime == startTime) {
-							startTimes[k].score++;
+							startTimes[k].freq++;
 							foundStartTime = true;
 							break;
 						}
@@ -1130,8 +1126,9 @@ function recommendWhenFromWho (auth,  people, timeMin, timeMax, callback) {
 					if (!foundStartTime) {
 						var startTimeObj = {
 							startTime: startTime,
-							score: 1
-						}
+							freq: 1,
+							min: startTimeMoment.hour() * 60 + startTimeMoment.minute()
+						};
 						startTimes.push(startTimeObj);
 					}
 					var foundEndTime = false;
@@ -1139,7 +1136,7 @@ function recommendWhenFromWho (auth,  people, timeMin, timeMax, callback) {
 					var endTime = endTimeMoment.format('HH:mm');
 					for (var l = 0; l < endTimes.length; l++) {
 						if (endTimes[l].endTime == endTime) {
-							endTimes[l].score++;
+							endTimes[l].freq++;
 							foundEndTime = true;
 							break;
 						}
@@ -1147,8 +1144,9 @@ function recommendWhenFromWho (auth,  people, timeMin, timeMax, callback) {
 					if (!foundEndTime) {
 						var endTimeObj = {
 							endTime: endTime,
-							score: 1
-						}
+							freq: 1,
+							min: endTimeMoment.hour() * 60 + endTimeMoment.minute()
+						};
 						endTimes.push(endTimeObj);
 					}
 				} catch(err) {
@@ -1157,15 +1155,53 @@ function recommendWhenFromWho (auth,  people, timeMin, timeMax, callback) {
 			}
 		}
 	}
+	
+	//Rank times by distance from average time.
+	//Find average time
+	var averageStartTime = 0;
+	var numTimes = 0;
+	for (var i = 0; i < startTimes.length; i++) {
+		for (var j = 0; j < startTimes[i].freq; j++) {
+			numTimes++;
+			averageStartTime += startTimes[i].min;
+		}
+	}
+	averageStartTime /= numTimes;
+	//Rank times by distance from average time.
+	//Find average time
+	var averageEndTime = 0;
+	numTimes = 0;
+	for (var i = 0; i < endTimes.length; i++) {
+		for (var j = 0; j < endTimes[i].freq; j++) {
+			numTimes++;
+			averageEndTime += endTimes[i].min;
+		}
+	}
+	averageEndTime /= numTimes;
+	//Give score as difference between time and average
+	for (var i = 0; i < startTimes.length; i++) {
+		startTimes[i].score = Math.abs(startTimes[i].min - averageStartTime);
+	}
+	for (var i = 0; i < endTimes.length; i++) {
+		endTimes[i].score = Math.abs(endTimes[i].min - averageEndTime);
+	}
 	startTimes.sort(compare);
 	endTimes.sort(compare);
+	if (startTimes && startTimes.length > 1 && endTimes && endTimes.length > 1 && startTimes[startTimes.length - 1].min > endTimes[endTimes.length - 1].min) {
+		//Simpson's paradox. Somehow, the best startTime is AFTER the end time. Let's just switch em.
+		var tempTime = startTimes[startTimes.length - 1];
+		startTimes[startTimes.length - 1] = endTimes[endTimes.length - 1];
+		startTimes[startTimes.length - 1].startTime = startTimes[startTimes.length - 1].endTime; 
+		endTimes[endTimes.length - 1] = tempTime;
+		endTimes[endTimes.length - 1].endTime = endTimes[endTimes.length - 1].startTime;
+		
+	}
 	if (startTimes && startTimes.length > 1 && endTimes && endTimes.length > 1) {
 		var timing = {
-		startTime : startTimes[0].startTime,
-		endTime : endTimes[0].endTime
-		}
+		startTime : startTimes[startTimes.length - 1].startTime,
+		endTime : endTimes[endTimes.length - 1].endTime
+		};
 		console.log(timing);
-		console.log(timeMin.toISOString() + timeMax.toISOString());
 		recommendFreeTime(auth, timing, timeMin, timeMax, callback);
 	}
 }
@@ -1297,7 +1333,7 @@ function recommendWhereFromWhen (timing) {
 }
 
 function findNewPlace (queryString, type, callback){
-	googleMapsClient.places({query:queryString},function(err,response){
+	googleMapsClient.places({query:queryString, type:type},function(err,response){
 		if (!err) {
 			console.log(response.json);
 			if (response.json.results[0].formatted_address)
