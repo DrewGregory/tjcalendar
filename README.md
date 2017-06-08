@@ -65,6 +65,7 @@ Watson Conversation consists of workspaces, or designated instructions for Watso
 6. Import the workspace.json file.
 7. Click the three dots in the resulting workspace shown on the dashboard and then "View Details."
 8. Copy and paste the WorkspaceID in your config.js file.
+
 For more information, visit this [instructable](http://www.instructables.com/id/Build-a-Talking-Robot-With-Watson-and-Raspberry-Pi/) (Step 6).
 ### Accessing Google Maps Credentials:
 Visit this [page](https://developers.google.com/maps/documentation/javascript/get-api-key) to add the API Key to your project. **Note: This API key should be registered in the same project that has your OAuth2 client id.**
