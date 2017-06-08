@@ -4,14 +4,14 @@ App that enables TJBot to be your personal planner. Uses Google Calendar.
 - Converses with user in a friendly, understandable way
 - Provides recommendations about the timing, location, and invitees for an event based on your Google Calendar history.
 - If the user chooses, adds the event to the user's Google Calendar
-
 ![Image Here](https://github.com/DrewGregory/tjcalendar/blob/master/TJCalendar%20Flowchart.png)
 ## Hardware Setup
 Required Hardware (links in instructables):
 - Raspberry Pi 3
-- USB Microphone (note: you may want one with a cord. "See Considerations")
+- USB Microphone (note: you may want one with a cord. See "Considerations" at the end of this README)
 - Speaker (preferably Bluetooth)
 - NeoPixel LED Light
+- Servo Motor
 Please refer to this [instructable](http://www.instructables.com/id/Build-TJ-Bot-Out-of-Cardboard/) to build your own TJBot.
 Next, you will need to configure your Raspberry Pi's audio. Please visit this [instructable](http://www.instructables.com/id/Build-a-Talking-Robot-With-Watson-and-Raspberry-Pi/) (Steps 1, 2, and 3) for configuring your Raspberry Pi's audio.  
 ## Installation
@@ -38,7 +38,7 @@ sudo apt-get install -y nodejs
 sudo apt-get install alsa-base alsa-utils libasound2-dev
 ```
 
-Begin by cloning this repository: ~ git clone https://github.com/DrewGregory/tjcalendar.git ~
+Begin by cloning this repository: `git clone https://github.com/DrewGregory/tjcalendar.git`
 
 Next, enter the directory: `cd tjcalendar`
 
@@ -48,7 +48,7 @@ Create a config file: `cp config.default.js config.js`
 
 Edit the file and input your credentials: `sudo nano config.js` or open with text editor.
 ### Note about inputting your credentials (Recommendation: Not Necessary).
-For security and ease, I often access my credentials on a separate computer and then transfer the credentials to the Raspberry Pi. **Manually typing the credentials into the config file is enormously error prone.** I would recommend takign remote control of your Pi from your comptuer via SSH and/or VNC.
+For security and ease, I often access my credentials on a separate computer and then transfer the credentials to the Raspberry Pi. **Manually typing the credentials into the config file is enormously error prone.** I would recommend taking remote control of your Pi from your comptuer via SSH and/or VNC.
 - SSH requires you to be on the same network as your Pi. It also requires a minimal ability to traverse IP addresses. To learn more, visit https://www.raspberrypi.org/documentation/remote-access/ssh/
 - VNC often works in conjunction with SSH, but VNC Viewer allows you to remotely control your Pi without IP addresses and via a separate network. To install VNC Viewer, visit: https://www.realvnc.com/download/viewer/windows/ and https://www.realvnc.com/download/vnc/raspberrypi/. For more information, visit [here](https://www.realvnc.com/products/vnc/).
 ### Acessing IBM Bluemix Credentials
@@ -63,6 +63,11 @@ The first time you run this application, you will have to sign into your Google 
 ## Considerations
 If you have any questions, please contact me at djgregny@gmail.com or submit an issue to this repository.
 To revise/improve this recipe, feel free to fork it, make your revisions, and submit a pull request to this repository.
+### USB Microphone
+This recipe requires a lot of precision when conversing with TJBot. Sometimes STT can be error prone, and the placement of the microphone is not ideal to hear your voice. If you are struggling having TJBot understand you, I would recommend considering other USB microphones that would improve clarity.
+Some microphone ideas:
+- [eBerry](https://www.amazon.com/eBerry-Adjustable-Microphone-Compatible-Recording/dp/B00UZY2YQE/ref=sr_1_7?ie=UTF8&qid=1496931078&sr=8-7&keywords=usb+microphone+raspberry+pi)
+- [Pyle Headset](https://www.amazon.com/Pyle-Microphone-Conference-Recording-PUSBMIC43/dp/B01MQCMJQU/ref=sr_1_7?s=electronics&ie=UTF8&qid=1496931146&sr=1-7&keywords=usb+wireless+mic)
 Improvement Ideas:
 - Make chatbot even more dynamic to changes in recommendations (Watson Conversation)
 - Improve efficacy of updating data
