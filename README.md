@@ -55,6 +55,17 @@ For security and ease, I often access my credentials on a separate computer and 
 Please refer to the [instructable](http://www.instructables.com/id/Build-a-Talking-Robot-With-Watson-and-Raspberry-Pi/) above (Step 5). *Note: You will have to add the Natural Language Understanding credentials as well.*
 ### Accessing Google Calendar and People credentials.
 Since this recipe accesses your Google Calendar and Contacts, you will need to pass OAuth2 tokens. These tokens verify your right to access user information. To begin this process, visit this [quickstart] (https://developers.google.com/google-apps/calendar/quickstart/nodejs) (Step 1). You should have a client_secret.json file at the end of this step in your recipe directory (tjcalendar).
+### Importing Conversaton Workspace
+Watson Conversation consists of workspaces, or designated instructions for Watson Conversation to follow. The workspace file for this recipe is the "workspace.json" file. Open Watson Conversation in your browser through these steps:
+1. Sign into IBM Bluemix.
+2. Go to the menu and click "Dashboard."
+3. Click the Conversation Credentials. 
+4. Click "Launch Tool."
+5. Click the button next to the "Create" button to import a workspace. 
+6. Import the workspace.json file.
+7. Click the three dots in the resulting workspace shown on the dashboard and then "View Details."
+8. Copy and paste the WorkspaceID in your config.js file.
+For more information, visit this [instructable](http://www.instructables.com/id/Build-a-Talking-Robot-With-Watson-and-Raspberry-Pi/) (Step 6).
 ### Accessing Google Maps Credentials:
 Visit this [page](https://developers.google.com/maps/documentation/javascript/get-api-key) to add the API Key to your project. **Note: This API key should be registered in the same project that has your OAuth2 client id.**
 ## Run!
