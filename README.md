@@ -68,6 +68,7 @@ This recipe requires a lot of precision when conversing with TJBot. Sometimes ST
 Some microphone ideas:
 - [eBerry](https://www.amazon.com/eBerry-Adjustable-Microphone-Compatible-Recording/dp/B00UZY2YQE/ref=sr_1_7?ie=UTF8&qid=1496931078&sr=8-7&keywords=usb+microphone+raspberry+pi)
 - [Pyle Headset](https://www.amazon.com/Pyle-Microphone-Conference-Recording-PUSBMIC43/dp/B01MQCMJQU/ref=sr_1_7?s=electronics&ie=UTF8&qid=1496931146&sr=1-7&keywords=usb+wireless+mic)
+
 Improvement Ideas:
 - Make chatbot even more dynamic to changes in recommendations (Watson Conversation)
 - Improve efficacy of updating data
