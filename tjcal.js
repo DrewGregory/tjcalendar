@@ -3,28 +3,17 @@ var readline = require('readline');
 var google = require('googleapis');
 var googlePeople = google.people('v1');
 var googleAuth = require('google-auth-library');
-var DiscoveryV1 = require ('watson-developer-cloud/discovery/v1');
 var moment = require('moment');
 moment().format();
 var TJBot = require('tjbot');
 var config = require('./config');
 var NatLangUnd = require('watson-developer-cloud/natural-language-understanding/v1');
-//var quickstart = require('./quickstart');
-var userName = 'Drew Gregory'; //TODO:replace with people.get('people/me');
-var email = 'djgregny@gmail.com';
-//TODO: Make these config variables someday...
-var cutOffEndHour = 21;
-var cutOffStartHour = 8;
-//var people = [];
-var googleMapsClient = require('@google/maps').createClient({
-	key: 'AIzaSyBZ2na0fTHkeA8YIjwdCEOBTvOc5apcmaM'
-});
-var locations = [];
-var locTypes = [];
-//4/CpeukA727qLOLbUITQ5lpfR3hORaHV5qx-zVmXoKvI8
+var userName = ''; 
+var email = '';
+var googleMapsClient = require('@google/maps').createClient(config.mapsKey);
 // If modifying these scopes, delete your previously saved credentials
-// at ~/.credentials/calendar-nodejs-quickstart.json
-var SCOPES = ['https://www.googleapis.com/auth/calendar','https://www.googleapis.com/auth/contacts.readonly'];
+// at TOKEN_PATH
+var SCOPES = ['https://www.googleapis.com/auth/calendar','https://www.googleapis.com/auth/contacts.readonly','https://www.googleapis.com/auth/userinfo.email','https://www.googleapis.com/auth/userinfo.profile'];
 //var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH || process.env.HOMEPATH || process.env.USERPROFILE) + '/.credentials/';This line generates a directory location that is system - independent.
 var TOKEN_DIR = '/home/pi/.tj-cal-credentials/'; //Change this directory if you are running on a system other than a Raspberry Pi.
 var TOKEN_PATH = TOKEN_DIR + 'tjcal-auth.json';
@@ -41,6 +30,7 @@ var tjConfig = {
 	log: {
 		level:'verbose'
 	}
+	
 };
 
 
@@ -58,15 +48,12 @@ var setUpTJBot = function (authentication){
 	tj.listen(function(msg) {
 			tj.pauseListening(); //Blocks asynchronous convos
 			console.log('Listening to ' + msg);
+			tj.shine('orange');
 			tj.converse(WORKSPACEID, msg, function(response){
-				tj.shine('orange');
 				var context = tj._conversationContext[WORKSPACEID];
-				//console.log(response.object.entities);
-				var obj = tj.speak(response.object.output.text + '')
-				if (obj) obj.then(function() {tj.shine('blue');tj.resumeListening();}); // [+ ''] Turns it into string so TJ actually speaks - dont listen until after done speaking
-				console.log(obj+ 'tjspeaks');
+				var obj = tj.speak(response.object.output.text + '');
+				if (obj) obj.then(function() {tj.resumeListening();tj.shine('blue');}); // [+ ''] Turns it into string so TJ actually speaks - dont listen until after done speaking
 				//Avoids responding to itself.
-				console.log(response.object.output);
 				if(response.object.output.action + '' == 'recommendKnowingWho') {
 					tj.pauseListening();
 					tj.shine('pink');
@@ -234,12 +221,13 @@ var setUpTJBot = function (authentication){
 								}
 								console.log(something);
 						});
-						tj.wave();
+					//Make TJ Dance - He is excited after all!
 					tj.wave();
 					tj.wave();
 					tj.wave();
-						tj.resumeListening();
-						tj.shine('blue');
+					tj.wave();
+					tj.resumeListening();
+					tj.shine('blue');
 						
 				} else if (response.object.output.action == 'findNewPlace') {
 					tj.pauseListening();
@@ -251,30 +239,30 @@ var setUpTJBot = function (authentication){
 						context.location = location;
 						console.log(context.location + 'location object');
 						//Change format from 09:00:00 to 09:00
-					context.startTime = context.startTime.value.substring(0,context.startTime.value.lastIndexOf(':'));
-					context.endTime = context.endTime.value.substring(0,context.endTime.value.lastIndexOf(':'));
+						context.startTime = context.startTime.value.substring(0,context.startTime.value.lastIndexOf(':'));
+						context.endTime = context.endTime.value.substring(0,context.endTime.value.lastIndexOf(':'));
 						var timing = {
 							startTime: context.startTime,
-						endTime: context.endTime
+							endTime: context.endTime
 						};
 						console.log(timing);
-					recommendFreeTime(authentication, timing, timeMin, timeMax, function(timing) {
-						context.date = timing.date;
-						context.timeData = timing.timeData;
-						console.log(context.numberOfPeopleToInvite);
-						context.invitees = recommendWhoFromWhen(timing, context.numberOfPeopleToInvite);
-						context.inviteList = peopleToString(context.invitees);		
-						context.printRecommendation = true;
-						console.log(context.inviteList + ' ' + context.date + ' ' + context.startTime + ' ' + context.endTime + ' ' +context.location);
-						if (context.date && context.startTime && context.endTime && context.location) {
-						tj.speak('My recommendation is to invite ' + context.inviteList  + ' on ' + context.date + ' from ' + context.startTime + 
-						' to ' + context.endTime + ' at ' + context.location + '.  Does that work well for you?').then(function(){
-						tj.resumeListening();tj.shine('blue');});
-						} else {
-						 tj.speak('Sorry about this. I couldn\'t garner enough data to make a recommendation. Try another recommendation, or try again after you use your calendar more.').then(function(){
-						tj.resumeListening();tj.shine('blue');});
-						 }
-					});
+						recommendFreeTime(authentication, timing, timeMin, timeMax, function(timing) {
+							context.date = timing.date;
+							context.timeData = timing.timeData;
+							console.log(context.numberOfPeopleToInvite);
+							context.invitees = recommendWhoFromWhen(timing, context.numberOfPeopleToInvite);
+							context.inviteList = peopleToString(context.invitees);		
+							context.printRecommendation = true;
+							console.log(context.inviteList + ' ' + context.date + ' ' + context.startTime + ' ' + context.endTime + ' ' +context.location);
+							if (context.date && context.startTime && context.endTime && context.location) {
+								tj.speak('My recommendation is to invite ' + context.inviteList  + ' on ' + context.date + ' from ' + context.startTime + 
+								' to ' + context.endTime + ' at ' + context.location + '.  Does that work well for you?').then(function(){
+								tj.resumeListening();tj.shine('blue');});
+							} else {
+								tj.speak('Sorry about this. I couldn\'t garner enough data to make a recommendation. Try another recommendation, or try again after you use your calendar more.').then(function(){
+								tj.resumeListening();tj.shine('blue');});
+							}
+						});
 					} else {
 						//Our search query didn't yield any results, or we have an error.
 						tj.speak('Unfortunately, I couldn\'t find anything for you. Try to have a shorter statement when I ask you to clarify.').then(function(){
@@ -282,10 +270,6 @@ var setUpTJBot = function (authentication){
 					 }
 					});
 						
-				}
-				else{
-					
-					
 				}
 			});
 		
@@ -302,8 +286,7 @@ var setUpTJBot = function (authentication){
 function peopleToString(people) {
 	var string = '';
 	for (var i = 0; i < people.length; i++) {
-		console.log(people[i]);
-		string += people[i].names[0].displayName + ', ';
+		string += people[i].names[0].displayName
 		if (i == people.length - 2) {
 			string += 'and '
 		} 
@@ -345,7 +328,6 @@ function authorize(credentials,callback) {
   var redirectUrl = credentials.installed.redirect_uris[0];
   var auth = new googleAuth();
   var oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
-
   // Check if we have previously stored a token.
   fs.readFile(TOKEN_PATH, function(err, token) {
     if (err) {
@@ -384,8 +366,23 @@ function getNewToken(oauth2Client, callback) {
         return;
       }
       oauth2Client.credentials = token;
-      storeToken(token);
-      callback(oauth2Client);
+      //Add user name to token. So we exclude user from invite list. 
+      googlePeople.people.get({
+		  auth: oauth2Client,
+		  resourceName: 'people/me',
+		  'requestMask.includeField': 'person.names,person.email_addresses'
+		  }, function(err, response) {
+			 console.log(response);
+			//Store name and email to token
+			if (response.names && response.names[0].displayName)
+				token.userName = response.names[0].displayName;
+			if (response.emailAddresses && response.emailAddresses[0].value)
+				token.email = response.emailAddresses[0].value;
+			console.log('userName = ' + token.userName);
+			console.log('email = ' + token.email);
+		storeToken(token);  
+		callback(oauth2Client);
+	  });
     });
   });
 }
@@ -565,11 +562,6 @@ function recommendFreeTime (auth, timing, timeMin, timeMax, callback) {
 				//Randomly add event
 				possibleDates.splice(randomIndex, 0, obj);
 		}
-		//Test Code TODO:Remove this
-			for (var l = 0; l < possibleDates.length; l++) {
-					console.log(possibleDates[l]);
-			}
-		
 		timing.date = possibleDates[0].date;
 		timing.timeData = possibleDates[0].timeData;
 		//Pass random available date to timing object.
@@ -680,12 +672,6 @@ function downloadCalendarHistory (auth) {
 		
 		var events = [];		
 		//Write new/updated events to disk.
-		userName = response.items[0].creator.displayName; //TODO: Get displayName from token just in case creator isn't user (//Write new/updated events to disk
-		var natural_language_understanding = new NatLangUnd({
-	 	 'username': '89afb475-4549-422d-a0f0-4834a6c79a4f',
-		  'password': 'XTIyoLjbz06C',
-		  'version_date': '2017-02-27'
-			});
 		//Go through all events.
 		//If attendees email matches a contact, add the event id to their events.
 		for (var i = 0; i < response.items.length; i++) {
@@ -715,7 +701,7 @@ function downloadCalendarHistory (auth) {
 
 			/*natural_language_understanding.analyze(parameters, function(err, result) {
 				if (err) {
-				//	console.log('error:', err); Errors are frequent. Often too many requests.
+				//	console.log('error:', err); Errors are frequent. Often too many requests. Temporarily disabled until we find a better solution.
 				}else {
 					if (result.entities) {
 					for (var l = 0; l < result.entities.length; l++) {
@@ -734,6 +720,8 @@ function downloadCalendarHistory (auth) {
 		}
 		try {
 			creds = JSON.parse(fs.readFileSync(TOKEN_PATH));
+			userName = creds.userName;
+			email = creds.email;
 			creds.events = events;
 			fs.writeFileSync(TOKEN_PATH, JSON.stringify(creds));
 		} catch (err) {
@@ -751,9 +739,9 @@ function downloadCalendarHistory (auth) {
 			fs.writeFileSync('Event' + i +'.json', JSON.stringify(response.items[i]));
 		var file = fs.readFileSync('Event' + i +'.json');
 		console.log('Adding Document');
-		/*discovery.addDocument({environment_id:'3294a2c3-8012-47cd-b939-19ddd3325ddd', 
-		collection_id:'50130334-f2e9-49aa-9aca-ec320a3898a0',
-		configuration_id:'1b46e4e9-ccc8-4478-8c6f-8dc1e2eb94dc', 
+		/*discovery.addDocument({environment_id:'', 
+		collection_id:'',
+		configuration_id:'', 
 		file: {
 	    value: JSON.stringify(response),
 	    options: {
@@ -778,14 +766,6 @@ function downloadCalendarHistory (auth) {
 			importantText += response.items[i].summary + ' ' + response.items[i].description 
 			+ ' ' + response.items[i].attendees.toString();
 		}
-		
-		
-		var natural_language_understanding = new NaturalLanguageUnderstandingV1({
-	 	 'username': '89afb475-4549-422d-a0f0-4834a6c79a4f',
-		  'password': 'XTIyoLjbz06C',
-		  'version_date': '2017-02-27'
-			});
-
 		var parameters = {
 		  'text': importantText,
 		  'features': {

@@ -30,4 +30,10 @@ exports.credentials.natural_language_understanding = {
 	'username':'',		
 	'password':'',		
 	'version_date':'2017-02-27'		
-};		
+};
+
+//Google Maps API Key
+//https://developers.google.com/maps/documentation/javascript/get-api-key
+exports.mapsKey = {
+	key: ''
+}		
