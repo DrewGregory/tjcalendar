@@ -5,6 +5,8 @@ App that enables TJBot to be your personal planner. Uses Google Calendar.
 - Provides recommendations about the timing, location, and invitees for an event based on your Google Calendar history.
 - If the user chooses, adds the event to the user's Google Calendar
 ![Image Here](https://github.com/DrewGregory/tjcalendar/blob/master/TJCalendar%20Flowchart.png)
+## Demos
+[![Link To Youtube Video](https://img.youtube.com/vi/EviQg5-rP0c/0.jpg)](https://www.youtube.com/watch?v=EviQg5-rP0c)
 ## Hardware Setup
 Required Hardware (links in instructables):
 - Raspberry Pi 3
