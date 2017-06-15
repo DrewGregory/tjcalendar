@@ -74,6 +74,18 @@ Visit this [page](https://developers.google.com/maps/documentation/javascript/ge
 ## Run!
 To run the application, run `sudo node tjcal` from a terminal in the directory (`cd tjcalendar`).
 The first time you run this application, you will have to sign into your Google account with the given link in the terminal. SSH/VNC can be particularly helpful in this scenario as well. Once you finish signing in, copy the resulting token in the browser and paste it into the terminal. Then press Enter. If the token is entered correctly, you will no longer have to enter your token on successive executions of the recipe. It will be saved locally on the Pi.
+### User Instructions
+All interaction with TJBot is through speech. The possible commands are listed below. Since Watson Conversation uses [intents](https://www.ibm.com/watson/developercloud/doc/conversation/intents.html), the recipe will work even if there is some variability in how you say the given command.
+Some commands:
+- Greeting ("Hi TJ Bot!")
+- Goodbye ("Goodbye TJ Bot")
+- Thank You ("Thank You TJ Bot!")
+- Features ("What can you do TJ Bot?")
+
+To begin the recommendation process, input one of the three criteria of an event: when, where, or who. TJBot will handle the rest!
+- Where ("I want to check out a past event" or "I want to try a restaurant")
+- When ("I want to have an event from nine AM to ten AM")
+- Who ("I want to invite three people")
 ## Considerations
 If you have any questions, please contact me at djgregny@gmail.com or submit an issue to this repository.
 To revise/improve this recipe, feel free to fork it, make your revisions, and submit a pull request to this repository.
