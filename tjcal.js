@@ -1,20 +1,19 @@
 var fs = require('fs');
 var readline = require('readline');
-var google = require('googleapis');
-var googlePeople = google.people('v1');
+var {people, calendar} = require('googleapis');
+var googlePeople = people('v1');
 var googleAuth = require('google-auth-library');
 var moment = require('moment');
 moment().format();
 var TJBot = require('tjbot');
 var config = require('./config');
 var NatLangUnd = require('watson-developer-cloud/natural-language-understanding/v1');
-var userName = ''; 
+var userName = '';
 var email = '';
 var googleMapsClient = require('@google/maps').createClient(config.mapsKey);
 // If modifying these scopes, delete your previously saved credentials
 // at TOKEN_PATH
 var SCOPES = ['https://www.googleapis.com/auth/calendar','https://www.googleapis.com/auth/contacts.readonly','https://www.googleapis.com/auth/userinfo.email','https://www.googleapis.com/auth/userinfo.profile'];
-//var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH || process.env.HOMEPATH || process.env.USERPROFILE) + '/.credentials/';This line generates a directory location that is system - independent.
 var TOKEN_DIR = '/home/pi/.tj-cal-credentials/'; //Change this directory if you are running on a system other than a Raspberry Pi.
 var TOKEN_PATH = TOKEN_DIR + 'tjcal-auth.json';
 //sudo pcmanfm opens hidden/root directories.
@@ -30,7 +29,7 @@ var tjConfig = {
 	log: {
 		level:'verbose'
 	}
-	
+
 };
 
 
@@ -39,7 +38,7 @@ var tjConfig = {
  * We only begin this function once the authentication process has finished.
  * */
 var setUpTJBot = function (authentication){
-	update(authentication);	
+	update(authentication);
 	//instantiate our TJBot!
 	var tj = new TJBot(hardware, tjConfig, credentials);
 	tj.wave();
@@ -92,7 +91,7 @@ var setUpTJBot = function (authentication){
 						//Pass message to initiate print recommendation.
 						//Send nonsense characters so Conversation doesn't think it has some intent
 						if (context.inviteList && context.date && context.startTime && context.endTime && context.location) {
-						tj.speak('My recommendation is to invite ' + context.inviteList  + ' on ' + context.date + ' from ' + context.startTime + 
+						tj.speak('My recommendation is to invite ' + context.inviteList  + ' on ' + context.date + ' from ' + context.startTime +
 						' to ' + context.endTime + ' at ' + context.location + '.  Does that work well for you?').then(function(){
 						tj.resumeListening();
 						tj.shine('blue');});
@@ -122,7 +121,7 @@ var setUpTJBot = function (authentication){
 						context.location = recommendWhereFromWhen(timing).location;
 						context.printRecommendation = true;
 						if (context.inviteList && context.date && context.startTime && context.endTime && context.location) {
-						tj.speak('My recommendation is to invite ' + context.inviteList  + ' on ' + context.date + ' from ' + context.startTime + 
+						tj.speak('My recommendation is to invite ' + context.inviteList  + ' on ' + context.date + ' from ' + context.startTime +
 						' to ' + context.endTime + ' at ' + context.location + '.  Does that work well for you?').then(function(){
 						tj.resumeListening();
 						tj.shine('blue');});
@@ -148,7 +147,7 @@ var setUpTJBot = function (authentication){
 						context.inviteList = peopleToString(context.invitees);
 						context.printRecommendation = true;
 						if (context.inviteList && context.date && context.startTime && context.endTime && context.location) {
-						tj.speak('My recommendation is to invite ' + context.inviteList  + ' on ' + context.date + ' from ' + context.startTime + 
+						tj.speak('My recommendation is to invite ' + context.inviteList  + ' on ' + context.date + ' from ' + context.startTime +
 						' to ' + context.endTime + ' at ' + context.location + '.  Does that work well for you?').then(function(){
 						tj.resumeListening();
 						tj.shine('blue');});
@@ -161,7 +160,7 @@ var setUpTJBot = function (authentication){
 				} else if (response.object.output.action == 'addEvent') {
 					tj.pauseListening();
 					tj.shine('pink');
-					
+
 					console.log('adding event');
 					var timeData = moment(context.timeData);
 					console.log(context.startTime + '');
@@ -200,7 +199,7 @@ var setUpTJBot = function (authentication){
 					} catch(err) {
 						console.log(err); //Couldn't find people file..
 					}
-					var calendar = google.calendar('v3');
+					var calendar = calendar('v3');
 					calendar.events.insert({
 							auth:authentication,
 							calendarId:'primary',
@@ -228,7 +227,7 @@ var setUpTJBot = function (authentication){
 					tj.wave();
 					tj.resumeListening();
 					tj.shine('blue');
-						
+
 				} else if (response.object.output.action == 'findNewPlace') {
 					tj.pauseListening();
 					tj.shine('pink');
@@ -251,11 +250,11 @@ var setUpTJBot = function (authentication){
 							context.timeData = timing.timeData;
 							console.log(context.numberOfPeopleToInvite);
 							context.invitees = recommendWhoFromWhen(timing, context.numberOfPeopleToInvite);
-							context.inviteList = peopleToString(context.invitees);		
+							context.inviteList = peopleToString(context.invitees);
 							context.printRecommendation = true;
 							console.log(context.inviteList + ' ' + context.date + ' ' + context.startTime + ' ' + context.endTime + ' ' +context.location);
 							if (context.date && context.startTime && context.endTime && context.location) {
-								tj.speak('My recommendation is to invite ' + context.inviteList  + ' on ' + context.date + ' from ' + context.startTime + 
+								tj.speak('My recommendation is to invite ' + context.inviteList  + ' on ' + context.date + ' from ' + context.startTime +
 								' to ' + context.endTime + ' at ' + context.location + '.  Does that work well for you?').then(function(){
 								tj.resumeListening();tj.shine('blue');});
 							} else {
@@ -269,14 +268,14 @@ var setUpTJBot = function (authentication){
 						tj.resumeListening();tj.shine('blue');});
 					 }
 					});
-						
+
 				}
 			});
-		
-		
+
+
 	});
-	
-	
+
+
 }
 /**
  * Transcribes list of people objects into string that will be said by TJBot
@@ -289,7 +288,7 @@ function peopleToString(people) {
 		string += people[i].names[0].displayName
 		if (i == people.length - 2) {
 			string += 'and '
-		} 
+		}
 	}
 	return string;
 }
@@ -298,7 +297,7 @@ function peopleToString(people) {
 
 
 
-/*Begin/Check Authenticcation Process*/
+/*Begin Check Authenticcation Process*/
 // Load client secrets from a local file.
 	fs.readFile('client_secret.json', function processClientSecrets(err, content) {
 	  if (err) {
@@ -366,7 +365,7 @@ function getNewToken(oauth2Client, callback) {
         return;
       }
       oauth2Client.credentials = token;
-      //Add user name to token. So we exclude user from invite list. 
+      //Add user name to token. So we exclude user from invite list.
       googlePeople.people.get({
 		  auth: oauth2Client,
 		  resourceName: 'people/me',
@@ -380,7 +379,7 @@ function getNewToken(oauth2Client, callback) {
 				token.email = response.emailAddresses[0].value;
 			console.log('userName = ' + token.userName);
 			console.log('email = ' + token.email);
-		storeToken(token);  
+		storeToken(token);
 		callback(oauth2Client);
 	  });
     });
@@ -463,7 +462,7 @@ function recommendFreeTime (auth, timing, timeMin, timeMax, callback) {
 		}
 		var possibleDates = [];
 		var numBusyTimeSlots = response.calendars.primary.busy.length;
-		var startTime = moment(response.calendars.primary.busy[0].start) === timeMin ? 
+		var startTime = moment(response.calendars.primary.busy[0].start) === timeMin ?
 		moment(response.calendars.primary.busy[0].end) : timeMin;
 		for (var i = 0; i < numBusyTimeSlots; i++) {
 			var endTime = moment(response.calendars.primary.busy[i].start);
@@ -510,13 +509,13 @@ function recommendFreeTime (auth, timing, timeMin, timeMax, callback) {
 					end: {
 						dateTime: jEndTime.toISOString()
 					}
-					}; 
+					};
 					if (timingFits(timing, jPossibleEvent)) {
 						console.log('j I should be free here:' + jStartTime.format('Do HH:mm') + ' - ' + jEndTime.format('Do HH:mm'));
 					var obj = {
 				 timeData : jStartTime,
 				 date : jStartTime.format('dddd MMMM Do')
-					};	
+					};
 					var randomIndex = Math.floor(Math.random() * possibleDates.length);
 					//Randomly add event
 					possibleDates.splice(randomIndex, 0, obj);
@@ -537,7 +536,7 @@ function recommendFreeTime (auth, timing, timeMin, timeMax, callback) {
 				possibleDates.splice(randomIndex, 0, obj);
 				}
 			}
-			
+
 			startTime = moment(response.calendars.primary.busy[i].end);
 		}
 		//Check last window not caught by for loop
@@ -567,7 +566,7 @@ function recommendFreeTime (auth, timing, timeMin, timeMax, callback) {
 		//Pass random available date to timing object.
 		callback(timing); //Pass timing object to callback function.
 	});
-	
+
 }
 
 /**
@@ -580,13 +579,13 @@ function update(auth) {
 	//Add parameter for lastTimeUpdated
 	if(credFile.lastTimeUpdated)
 		timeMin = credFile.lastTimeUpdated;
-	else 
+	else
 		timeMin = moment().clone().subtract(10,'years').toISOString(); //This must be the first time we downloaded data! How snazzy.
-	
+
 	//Get sync token that is used to fetch only updated contacts.
 	var oldSyncToken = credFile.syncToken;
 	//Update People
-	//credFile.syncToken = 
+	//credFile.syncToken =
 	updatePeople(auth, oldSyncToken);
 	//Add parameter for lastTimeUpdated
 	credFile.lastTimeUpdated = moment().toISOString();
@@ -608,7 +607,7 @@ function updatePeople(auth, pageToken) {
 		if(err) {
 			console.log(err);
 			return;
-		} 
+		}
 		var people = [];
 		try {
 			//people = JSON.parse(fs.readFileSync(TOKEN_DIR + 'people.json'));
@@ -618,27 +617,12 @@ function updatePeople(auth, pageToken) {
 		//Update people JSON file.
 		for (var i = 0; i < response.connections.length; i++) {
 			if (response.connections[i].names) { //We are not adding a contact without a name.
-				/*var personExists = false;
-				for (var j = 0; j < people.length; j++) {
-					if (people[j]) {
-						if (people[j].resourceName === response.connections[i].resourceName) {
-							//Keep the event ids. Those are important
-							response.connections[i].events = people[j].events;
-							people[j] = response.connections[i];
-							personExists = true;
-							break;
-						}
-					}
-				}
-				if (!personExists) {
-					response.connections[i].events = [];*/
 					var person = response.connections[i];
 					person.events = [];
 					people.push(person);
-				//}
 			}
 		}
-		
+
 		//If names are 'contained' in any of aliases, add event to person event array.
 		//Store contacts in JSON file.
 		fs.writeFileSync(TOKEN_DIR + 'people.json', JSON.stringify(people));
@@ -647,15 +631,14 @@ function updatePeople(auth, pageToken) {
 			console.log('Sending another people request...');
 			updatePeople(auth,response.nextPageToken); //Ewww... recursion...
 		} else {
-		//Download Calendar History and Update 
+		//Download Calendar History and Update
 		downloadCalendarHistory(auth);
-		//return response.nextSyncToken; 
-		}	
+		}
 	});
 }
 
 
-function downloadCalendarHistory (auth) { 
+function downloadCalendarHistory (auth) {
 	var calendar = google.calendar('v3');
 	//Get first page of results.
 	//TODO: Add pagination if 2500 events just isn't enough.
@@ -669,8 +652,8 @@ function downloadCalendarHistory (auth) {
 			console.log(err);
 			return;
 		}
-		
-		var events = [];		
+
+		var events = [];
 		//Write new/updated events to disk.
 		//Go through all events.
 		//If attendees email matches a contact, add the event id to their events.
@@ -682,7 +665,7 @@ function downloadCalendarHistory (auth) {
 				if (response.items[i].attendees) {
 					for (var j = 0; j < response.items[i].attendees.length; j++) {
 						addEventToPerson(response.items[i].attendees[j], response.items[i].id);
-					}		
+					}
 				}
 				fs.writeFileSync(TOKEN_DIR + eventId + '.json', JSON.stringify(event));
 			} catch(error) {
@@ -693,30 +676,11 @@ function downloadCalendarHistory (auth) {
 		  'text': importantText,
 			'features': {
 				'entities': {
-					'people': true, 
+					'people': true,
 					'limit': 10
 					}
 				}
 			};
-
-			/*natural_language_understanding.analyze(parameters, function(err, result) {
-				if (err) {
-				//	console.log('error:', err); Errors are frequent. Often too many requests. Temporarily disabled until we find a better solution.
-				}else {
-					if (result.entities) {
-					for (var l = 0; l < result.entities.length; l++) {
-						if (result.entities[l].type == 'Person') {
-							var person = {
-								displayName: result.entities[l].text
-								};
-								console.log(person);
-							addEventToPerson(person, eventId);
-						}
-						
-					}
-					}
-				}
-			});*/
 		}
 		try {
 			creds = JSON.parse(fs.readFileSync(TOKEN_PATH));
@@ -727,62 +691,7 @@ function downloadCalendarHistory (auth) {
 		} catch (err) {
 			console.log(err);
 		}
-		});
-		
-
-		
-	
-		/*Supposed to break up each event for its own JSON file and add it to collection in 
-		Discovery. Add Document does not work:
-		//https://github.com/watson-developer-cloud/node-sdk/issues/397*
-		for (var i = 0; i < response.items.length;i++) {
-			fs.writeFileSync('Event' + i +'.json', JSON.stringify(response.items[i]));
-		var file = fs.readFileSync('Event' + i +'.json');
-		console.log('Adding Document');
-		/*discovery.addDocument({environment_id:'', 
-		collection_id:'',
-		configuration_id:'', 
-		file: {
-	    value: JSON.stringify(response),
-	    options: {
-      	filename: 'Event' + i + '.json',
-    	  contentType: 'application/json'
-	    }
-  		}},
-		function(error, data) {
-			if (error)
-				console.log(error);
-		});*
-		}*/
-		
-		
-		/*
-		As a backup, find a way to parse information your own way!
-		Ideas: Use Natural Language Understanding, extract fields which could contain important
-		information (summary,description, attendees)
-		var importantText = '';
-		for (var i = 0; i < response.items.length; i++) {
-		console.log(response.items[i]);
-			importantText += response.items[i].summary + ' ' + response.items[i].description 
-			+ ' ' + response.items[i].attendees.toString();
-		}
-		var parameters = {
-		  'text': importantText,
-		  'features': {
-	    	'entities': {
-		      'people': true, 
-	    	  'limit': 10
-	    	}
-		  }
-		};
-
-		natural_language_understanding.analyze(parameters, function(err, result) {
-  		if (err)
-    		console.log('error:', err);
-		  else
-    		console.log(JSON.stringify(result, null, 2));
-		});*/	
-	
+	});
 }
 
 
@@ -808,8 +717,8 @@ function addEventToPerson(person, eventId) {
 						fs.writeFileSync(TOKEN_DIR + 'people.json',JSON.stringify(people));
 						return;
 					}
-				} 
-		
+				}
+
 			if (people[i].emailAddresses) {//Some contacts don't have email addresses
 			for (var j = 0; j < people[i].emailAddresses.length; j++) {
 				if (people[i].emailAddresses[j].value === person.email) {
@@ -818,7 +727,7 @@ function addEventToPerson(person, eventId) {
 					fs.writeFileSync(TOKEN_DIR + 'people.json',JSON.stringify(people));
 					return;
 				}
-			} 
+			}
 			}
 		}
 	}
@@ -835,7 +744,7 @@ function addLocation(location) {
 		if (locations[i].name === location) {
 			locations[i].score++;
 			return;
-		}	
+		}
 	}
 	//Didn't find a match. Let's add it instead.
 	var locationEntry = {
@@ -859,8 +768,8 @@ function compare(p1, p2) {
 }
 /**
  * 	Recommends timeframe given a location and it's opening hours.
- * TODO: Figure out way to find place details, while considering API limitations.	
- * 
+ * TODO: Figure out way to find place details, while considering API limitations.
+ *
  */
 function recommendWhenFromNewPlace() {
 
@@ -871,7 +780,7 @@ function recommendWhenFromNewPlace() {
 /**
 *	Recommends who to invite based on where event is.
 *	@param {Integer} numRecs number of people to invite
-*	@param {location} location where event will be 
+*	@param {location} location where event will be
 *	Returns array of recommended people
 */
 function recommendWhoFromWhere(numRecs, location) {
@@ -902,8 +811,8 @@ function recommendWhoFromWhere(numRecs, location) {
 				} catch(err) {
 					//Event doesn't exist. Also shouldn't happen.
 					console.log(err);
-				} 
-			} 
+				}
+			}
 		}
 	}
 	people.sort(compare);
@@ -954,7 +863,7 @@ function recommendWhenFromWhere(auth, location, timeMin, timeMax, callback){
 						}
 					}
 					if (!foundStartTime) {
-						
+
 						var startTimeObj = {
 							startTime: startTime,
 							freq: 1,
@@ -988,7 +897,7 @@ function recommendWhenFromWhere(auth, location, timeMin, timeMax, callback){
 			} catch(err) {
 			 //Event doesn't exist. Also shouldn't happen.
 			console.log(err);
-			}		
+			}
 		}
 	}
 	//Rank times by distance from average time.
@@ -1026,10 +935,10 @@ function recommendWhenFromWhere(auth, location, timeMin, timeMax, callback){
 		//Simpson's paradox. Somehow, the best startTime is AFTER the end time. Let's just switch em.
 		var tempTime = startTimes[startTimes.length - 1];
 		startTimes[startTimes.length - 1] = endTimes[endTimes.length - 1];
-		startTimes[startTimes.length - 1].startTime = startTimes[startTimes.length - 1].endTime; 
+		startTimes[startTimes.length - 1].startTime = startTimes[startTimes.length - 1].endTime;
 		endTimes[endTimes.length - 1] = tempTime;
 		endTimes[endTimes.length - 1].endTime = endTimes[endTimes.length - 1].startTime;
-		
+
 	}
 	if (startTimes && startTimes.length >= 1 && endTimes && endTimes.length >= 1) {
 		//Return last elements: we want a LOW score here.
@@ -1135,7 +1044,7 @@ function recommendWhenFromWho (auth,  people, timeMin, timeMax, callback) {
 			}
 		}
 	}
-	
+
 	//Rank times by distance from average time.
 	//Find average time
 	var averageStartTime = 0;
@@ -1171,10 +1080,10 @@ function recommendWhenFromWho (auth,  people, timeMin, timeMax, callback) {
 		//Simpson's paradox. Somehow, the best startTime is AFTER the end time. Let's just switch em.
 		var tempTime = startTimes[startTimes.length - 1];
 		startTimes[startTimes.length - 1] = endTimes[endTimes.length - 1];
-		startTimes[startTimes.length - 1].startTime = startTimes[startTimes.length - 1].endTime; 
+		startTimes[startTimes.length - 1].startTime = startTimes[startTimes.length - 1].endTime;
 		endTimes[endTimes.length - 1] = tempTime;
 		endTimes[endTimes.length - 1].endTime = endTimes[endTimes.length - 1].startTime;
-		
+
 	}
 	if (startTimes && startTimes.length > 1 && endTimes && endTimes.length > 1) {
 		var timing = {
@@ -1216,8 +1125,8 @@ function recommendWhoFromWhen (timing, numRecs) {
 					//Event doesn't exist. Also shouldn't happen.
 					console.log(err);
 				}
-				 
-			} 
+
+			}
 		}
 	}
 	people.sort(compare);
@@ -1229,7 +1138,7 @@ function recommendWhoFromWhen (timing, numRecs) {
 			recs.push(people[i]);
 	}
 	return recs;
-	
+
 }
 
 /**
@@ -1247,7 +1156,6 @@ function timingFits (timing, event) {
 		var endTimeMinute = timing.endTime.substring(timing.endTime.indexOf(':') + 1);
 		var timingEndTime = moment().clone().hour(endTimeHour).minute(endTimeMinute);
 		var eventStartTimeString = moment(event.start.dateTime).format('HH:mm');
-		//console.log(event.start.dateTime + eventStartTimeString);
 		var eventStartTimeHour = eventStartTimeString.substring(0,eventStartTimeString.indexOf(':'));
 		var eventStartTimeMinute = eventStartTimeString.substring(eventStartTimeString.indexOf(':') + 1);
 		var eventStartTime = moment().clone().hour(eventStartTimeHour).minute(eventStartTimeMinute);
@@ -1255,13 +1163,11 @@ function timingFits (timing, event) {
 		var eventEndTimeHour = eventEndTimeString.substring(0,eventEndTimeString.indexOf(':'));
 		var eventEndTimeMinute = eventEndTimeString.substring(eventEndTimeString.indexOf(':') + 1);
 		var eventEndTime = moment().clone().hour(eventEndTimeHour).minute(eventEndTimeMinute);
-		//console.log(timing.startTime + ' - ' + eventStartTimeString + timingStartTime.diff(eventStartTime));
-		//console.log(eventEndTimeString + ' - ' + timing.endTime + eventEndTime.diff(timingEndTime));
 		return timingStartTime.diff(eventStartTime) >= -60 * 1000 && eventEndTime.diff(timingEndTime) >= -60 * 1000; //If it is within a minute, then we are good.
 		} catch (err) {
 			//Probably a formatting error. Oopsies.
 			console.log(err);
-		}	
+		}
 	}
 	return false;
 }
@@ -1293,11 +1199,10 @@ function recommendWhereFromWhen (timing) {
 				for (var j = 0; j < locations.length; j++) {
 					if (locations[j].location.indexOf(locationObj.location) !== -1) {
 						locations[j].score++;
-						console.log(locations[j]);
 						foundLocation = true;
 						break;
 					}
-				}	
+				}
 				if (!foundLocation) {
 					locations.push(locationObj);
 				}
@@ -1315,10 +1220,9 @@ function recommendWhereFromWhen (timing) {
 function findNewPlace (queryString, type, callback){
 	googleMapsClient.places({query:queryString, type:type},function(err,response){
 		if (!err) {
-			console.log(response.json);
 			if (response.json.results[0].formatted_address)
 			callback(response.json.results[0].formatted_address);
-			else 
+			else
 			callback('Bad Location');
 		} else {
 			console.log(err);
